@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace BookInfo.Application.ViewModels.BookViewModel
 {
-   public class CommentsBookViewModel
+    public class CommentsBookViewModel
     {
-        public string writter { set; get; }
-        public int CommentId { get; set; }
-        public string Desription { get; set; }
+        public string Description { set; get; }
+        public string Writter { get; set; }
         public DateTime PostageDateTime { get; set; }
-      
-     
+        public List<CommentsBookViewModel> SubComments { set; get; }
+
+
     }
 }

@@ -21,37 +21,46 @@ namespace BookInfo.Api.Controllers.BookApi
     {
        
         private readonly IUnitOfWork _unitofwork;
-        private readonly DataContext _context;
         private readonly IMapper _mapper;
 
-        public BookController(IUnitOfWork unitofwork ,DataContext context , IMapper mapper)
+        public BookController(IUnitOfWork unitofwork  , IMapper mapper)
         {
              
             _unitofwork = unitofwork;
-            _context = context;
             _mapper = mapper;
         }
 
         [HttpGet("GetBooksList")]
         public async Task<PagedList<BooksPageListViewModel>> GetBooksList([FromQuery] PaginationParams pageparams)
         {
-           
-
-           
-         
            return await _unitofwork.bookRepository.GetBooksList(pageparams);
         }
+
+        [HttpGet("GetBookInfo/{BookId}")]
+        public async Task<ActionResult<BookInfoViewModel>> GetBookInfo(int BookId)
+        {
+            if (_unitofwork.BaseRepository<Book>().FindById(BookId) == null)
+                return BadRequest("کتاب مورد نظر یافت نشد");
+
+          return Ok(await _unitofwork.bookRepository.GetBookInfo(BookId));
+
+        }
+           
+         
+           
+       
 
         [HttpPost("AddBook")]
         public async Task<IActionResult> AddBook(BookCreateViewModel viewmodel)
         {
-            if(ModelState.IsValid)
-            {
+            
                 await _unitofwork.bookRepository.CreateBookAsync(viewmodel);
-               await _unitofwork.Complete();
+
+            if (await _unitofwork.Complete() != true)
+                return BadRequest("خطایی رخ داده است");
                 return Ok("با موفقیت ثبت شد");
-            }
-            return BadRequest("خطایی رخ داده است");
+           
+           
 
            
         }
@@ -59,7 +68,7 @@ namespace BookInfo.Api.Controllers.BookApi
         [HttpDelete("DeleteBook/{BookId}")]
         public async Task<IActionResult> DeleteBook(int BookId)
         {
-            var book = await _unitofwork.BaseRepository<Book>().FindByIdAsync(BookId);
+            var book =  _unitofwork.BaseRepository<Book>().FindById(BookId);
             if (book == null) return NotFound();
 
             _unitofwork.BaseRepository<Book>().Remove(book);
@@ -70,7 +79,7 @@ namespace BookInfo.Api.Controllers.BookApi
         [HttpPut("EditBook")]
         public async Task<ActionResult<BookEditViewModel>> EditBook(BookEditViewModel viewmodel)
         {
-            var RecentBook = await _unitofwork.BaseRepository<Book>().FindByIdAsync(viewmodel.BookId);
+            var RecentBook =  _unitofwork.BaseRepository<Book>().FindById(viewmodel.BookId);
             if (RecentBook == null)
                 return NotFound();
             var editedbook=await _unitofwork.bookRepository.EditBook(viewmodel, RecentBook);
@@ -85,7 +94,7 @@ namespace BookInfo.Api.Controllers.BookApi
         [HttpGet("{bookId}")]
         public async Task<IActionResult> Showauthorsbook(int bookId)
         {
-            if (await _unitofwork.BaseRepository<Book>().FindByIdAsync(bookId) == null)
+            if ( _unitofwork.BaseRepository<Book>().FindById(bookId) == null)
                 return NotFound();
            
            return  Ok(await _unitofwork.bookRepository.GetBookWithAuthorsAsync(bookId));
@@ -99,7 +108,7 @@ namespace BookInfo.Api.Controllers.BookApi
         [HttpGet("getauthor/{bookid}")]
         public async Task<IActionResult> GetAuthorsBook(int bookid)
         {
-             if (await _unitofwork.BaseRepository<Book>().FindByIdAsync(bookid) == null)
+             if ( _unitofwork.BaseRepository<Book>().FindById(bookid) == null)
                 return NotFound();
             return Ok(await _unitofwork.bookRepository.GetAuthorAsync(bookid));
         }

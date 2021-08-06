@@ -23,7 +23,7 @@ namespace BookInfo.Infra.Data.Repository
         public async Task<IEnumerable<TEntity>> GetAllEntities() =>
           await _dbset.AsNoTracking().ToListAsync();
        
-        public async Task<TEntity> FindByIdAsync(Object id)=>await _dbset.FindAsync(id);
+        public  TEntity FindById(Object id)=> _dbset.Find(id);
         
           
         

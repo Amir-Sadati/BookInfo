@@ -17,6 +17,6 @@ namespace BookInfo.Application.Interfaces
         Task CreateBookAsync(BookCreateViewModel viewModel);
         Task<BookEditViewModel> EditBook(BookEditViewModel viewmodel, Book Recentbook);
         Task<PagedList<BooksPageListViewModel>> GetBooksList(PaginationParams pageparams);
-
+        Task<List<BookInfoViewModel>> GetBookInfo(int BookId);
     }
 }

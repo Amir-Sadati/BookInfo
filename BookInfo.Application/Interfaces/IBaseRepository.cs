@@ -9,7 +9,7 @@ namespace BookInfo.Domain.Interfaces
     public interface IBaseRepository<TEntity> where TEntity:class
     {
         Task<IEnumerable<TEntity>> GetAllEntities();
-        Task<TEntity> FindByIdAsync(Object id);
+        TEntity FindById(Object id);
         Task AddAsync(TEntity entity);
         void Remove(TEntity entity);
         void Update(TEntity entity);

@@ -31,6 +31,46 @@ namespace BookInfo.Infra.Data.Repository
             _mapper = mapper;
         }
 
+        public async Task<List<BookInfoViewModel>> GetBookInfo(int BookId)
+        {
+          var bookinfo=await _context.Book.Where(x => x.BookId == BookId && x.IsPublish == true && x.Delete != true)
+                .Select(x => new BookInfoViewModel
+                {
+                  BookId=x.BookId,
+                   BookName=x.BookName,
+                   Summary= x.Summary,
+                   PublishYear= x.PublishYear,
+                   Price= x.Price,
+                   NumOfPages= x.NumOfPages,
+                   Stock= x.Stock,
+                   PublisherName= x.Publisher.PublisherName,
+                    Authors = x.BookAuthors.Select(x => x.Author.Name + " " + x.Author.Family).ToList(),
+                    Categories = x.BookCategories.Select(x => x.Category.CategoryName).ToList(),
+
+                  Comments=x.Comments.Where(x => x.IsConfirm).Select(x => new CommentsBookViewModel
+                    {
+
+                      SubComments = x.SubComments.Select
+                       (x => new CommentsBookViewModel
+                       {
+                          Description= x.Desription,
+                           Writter = x.AppUser.Name + " " + x.AppUser.Family,
+                          PostageDateTime= x.PostageDateTime
+                       }).OrderByDescending(x => x.PostageDateTime).ToList(),
+                      Description =x.Desription,
+                        Writter = x.AppUser.Name + " " + x.AppUser.Family,
+                       PostageDateTime= x.PostageDateTime,
+                    }).OrderByDescending(x => x.PostageDateTime).ToList(),
+                }).AsNoTracking().ToListAsync();
+
+            return bookinfo;
+             
+            
+
+             
+                
+        }
+
         public async Task<BookWithAuthorsDto> GetBookWithAuthorsAsync(int BookId)
         {
 
