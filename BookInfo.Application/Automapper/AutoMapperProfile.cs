@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BookInfo.Application.ViewModels.BookDto;
 using BookInfo.Application.ViewModels.BookViewModel;
+using BookInfo.Application.ViewModels.CommentViewModel;
 using BookInfo.Application.ViewModels.UserViewModel;
 using BookInfo.Domain.Entities;
 using BookInfo.Domain.Entities.Identities;
@@ -23,6 +24,8 @@ namespace BookInfo.Application.Automapper
             CreateMap<Book, BooksPageListViewModel>();
             CreateMap<UserViewModel, AppUser>();
             CreateMap<UserEditViewModel, AppUser>();
+            CreateMap<CreateCommentViewModel,Comment>();
+
 
 
             

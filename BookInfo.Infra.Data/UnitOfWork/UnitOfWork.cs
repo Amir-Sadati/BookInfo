@@ -18,6 +18,8 @@ namespace BookInfo.Infra.Data.UnitOfWork
         private readonly DataContext _context;
         private readonly IMapper _mapper;
         private IBookRepository _bookRepository;
+        private ICommentsRepository _commentRepository;
+
 
         public UnitOfWork(DataContext context, IMapper mapper)
         {
@@ -35,6 +37,17 @@ namespace BookInfo.Infra.Data.UnitOfWork
             }
 
         }
+        public ICommentsRepository commentRepository
+        {
+            get
+            {
+                if (_commentRepository == null)
+                    _commentRepository = new CommentRepository(_context);
+                return _commentRepository;
+            }
+
+        }
+
         public IBaseRepository<TEntity> BaseRepository<TEntity>() where TEntity : class
         {
             IBaseRepository<TEntity> baserepository = new BaseRepository<TEntity>(_context);

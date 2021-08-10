@@ -16,7 +16,7 @@ namespace BookInfo.Application.ViewModels.UserViewModel
         public DateTime BirthDate { get; set; }
         public string Gender { set; get; }
         public int CityId { set; get; } 
-        public string Token { set; get; }
+        public string PhoneNumber { set; get; }
       
     }
 }

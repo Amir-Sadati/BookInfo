@@ -8,6 +8,6 @@ namespace BookInfo.Application.Interfaces
 {
     public interface IEmailService
     {
-        Task SendEmail(string EmailAddress, string Subject, string Message);
+        Task SendEmailAsync(string EmailAddress, string Subject, string Message);
     }
 }

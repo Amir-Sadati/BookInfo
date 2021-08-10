@@ -10,6 +10,7 @@ namespace BookInfo.Application.Interfaces
    public interface IUnitOfWork
     {
         Task<bool> Complete();
+        ICommentsRepository commentRepository { get; }
         IBookRepository bookRepository { get; }
         IBaseRepository<TEntity> BaseRepository<TEntity>() where TEntity : class;
     }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BookInfo.Application.Interfaces
 {
-    class IAuthorsRepository
+    public interface IAuthorsRepository
     {
     }
 }

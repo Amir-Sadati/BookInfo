@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Server.HttpSys;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
 namespace BookInfo.Api.Controllers.AccountApi
@@ -44,60 +45,89 @@ namespace BookInfo.Api.Controllers.AccountApi
         [HttpPost("register")]
         public async Task<ActionResult<UserViewModel>> Register(UserViewModel viewmodel)
         {
+          
             if (_userManager.Users.Any(x => x.UserName == viewmodel.Username.ToLower()))
                 return BadRequest("این نام کاربری انتخاب شده است");
 
-
+            
             var user = _mapper.Map<AppUser>(viewmodel);
 
             user.UserName = viewmodel.Username.ToLower();
-            
+            user.IsActive = true;
 
             var result = await _userManager.CreateAsync(user, viewmodel.Password);
-
-            if (!result.Succeeded) return BadRequest(result.Errors);
-
-            if (!_roleManager.Roles.Any(x => x.Name == "member"))
-                await _roleManager.CreateAsync(new AppRole { Name = "member" });
-
-            var roleResult = await _userManager.AddToRoleAsync(user, "Member");
-
-            if (!roleResult.Succeeded) return BadRequest(result.Errors);
-
-            //We can send email to member for confirm email
-            return new UserViewModel
+            if (result.Succeeded)
             {
-                Username = user.UserName,
-                Token = await _tokenService.CreateToken(user),
+                var role = await _roleManager.FindByNameAsync("member");
+                if (role == null)
+                    await _roleManager.CreateAsync(new AppRole { Name = "member" });
 
+                var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+                if (roleResult.Succeeded)
+                {
+                    var Cod =await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var callbackUrl = Url.Action("ConfirmEmail", "Account", values: new { userId = user.Id.ToString(), code = Cod }, protocol: Request.Scheme);
+                    await _emailService.SendEmailAsync(viewmodel.Email,"تایید حساب کاربری ", $"<div dir='rtl' style='font-family:tahoma;font-size:14px'>لطفا با کلیک روی لینک زیر  حساب کاربری خود را فعال کنید.  <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>کلیک کنید</a></div>");
 
-            };
-        }
+                }
+                return Ok("برای فعالسازی اکانت به ایمیل خود مراجعه کنید");
+            }
+            else
+                return BadRequest(result.Errors);
 
+               }
 
         [HttpPost("Signin")]
-        public async Task<IActionResult> SignIn(UserSignInViewModel viewmodel)
+        public async Task<ActionResult<UserTokenViewModel>> SignIn(UserSignInViewModel viewmodel)
         {
-            if (!ModelState.IsValid)
-                return BadRequest("خطایی پیش آمده است");
+            
             var user = await _userManager.FindByNameAsync(viewmodel.UserName);
             if (user == null)
                 return BadRequest("نام کاربری یا رمز عبور صحیح نمی باشد"); // Security :D
-        
-          var check= await _signInManager.CheckPasswordSignInAsync(user,viewmodel.Password,false);
+        if(user.IsActive)
+            {
+              
+            var check= await _signInManager.CheckPasswordSignInAsync(user,viewmodel.Password,false);
             if (check.Succeeded)
-                return Ok("oK");
-            else if(check.IsLockedOut)
+                return new UserTokenViewModel
+                {
+                    UserName = user.UserName,
+                    Token = await _tokenService.CreateToken(user),
+                };
+            
+
+            else if (check.IsLockedOut)
             {
                 return BadRequest("حساب کاربری شما قفل شده است");
             }
+
             else if (check.RequiresTwoFactor)
             {
                 return BadRequest("نیاز به احراز هویت 2 مرحله ای است");
             }
             else
-                return BadRequest("نام کاربری یا رمز عبور شما صحیح نیست");
+            {
+               if (!await _userManager.CheckPasswordAsync(user,viewmodel.Password))
+               return BadRequest("نام کاربری یا رمز عبور شما صحیح نیست");
+               return BadRequest("لطفا به ایمیل خود مراجعه کنید و روی لینک تایید حساب کلیک کنید");
+                
+           
+            }
+              
+          }
+            
+            return BadRequest("حساب شما مسدود شده است");
+
+         
         }
+
+        [HttpPost("SignOut")]
+        public async Task UserSignOut()
+        {
+            
+           await _signInManager.SignOutAsync();
+        }
+       
 
        [Authorize(AuthenticationSchemes = 
          JwtBearerDefaults.AuthenticationScheme)] // Need Jwt 
@@ -120,14 +150,14 @@ namespace BookInfo.Api.Controllers.AccountApi
         }
      
 
-        [HttpPost("SendEmail")]
+       [HttpPost("SendEmail")]
        [Authorize(AuthenticationSchemes = 
          JwtBearerDefaults.AuthenticationScheme,Policy ="Admin")]
         public async Task<IActionResult> SendEmail(EmailViewModel viewModel)
         {
             foreach(var item in viewModel.EmailAddress)
             {
-               await _emailService.SendEmail(item, viewModel.Subject,viewModel.Message);
+               await _emailService.SendEmailAsync(item, viewModel.Subject,viewModel.Message);
             }
 
             return Ok("با موفقیت ارسال شد");

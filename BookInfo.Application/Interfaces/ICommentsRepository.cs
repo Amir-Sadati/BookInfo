@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace BookInfo.Application.Interfaces
 {
-   public class ICommentsRepository
+   public interface ICommentsRepository
     {
+        Task<bool> ConfirmComment(int[] CommentId);
     }
 }

@@ -1,4 +1,6 @@
 ﻿using BookInfo.Application.Interfaces;
+using BookInfo.Domain.Classes;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,25 +13,31 @@ namespace BookInfo.Application.Services
 {
    public class EmailService :IEmailService
     {
-        public async Task SendEmail(string EmailAddress,string Subject, string Message)
+        private readonly IOptionsSnapshot<EmailInfo> _emailinfo;
+
+        public EmailService(IOptionsSnapshot<EmailInfo>emailinfo)
+        {
+            _emailinfo = emailinfo;
+        }
+        public async Task SendEmailAsync(string EmailAddress,string Subject, string Message)
         {
              using (var Client = new SmtpClient())
             {
                 var Credential = new NetworkCredential
                 {
-                    UserName="amirsadati79",
-                    Password= "GussWhat", // :D
+                    UserName=_emailinfo.Value.UserName,
+                    Password=_emailinfo.Value.Password,
                 };
 
                 Client.Credentials = Credential;
-                Client.Host = "smtp.gmail.com";
-                Client.Port = 587;
+                Client.Host = _emailinfo.Value.Host;
+                Client.Port = _emailinfo.Value.Port;
                 Client.EnableSsl = true;
 
                 using (var emailMessage = new MailMessage())
                 {
                     emailMessage.To.Add(new MailAddress(EmailAddress));
-                    emailMessage.From = new MailAddress("amirsadati79@gmail.com");
+                    emailMessage.From = new MailAddress(_emailinfo.Value.Address);
                     emailMessage.Subject = Subject;
                     emailMessage.IsBodyHtml = true;
                     emailMessage.Body = Message;
