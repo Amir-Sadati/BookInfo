@@ -49,7 +49,6 @@ namespace BookInfo.Api.Controllers.AccountApi
             if (_userManager.Users.Any(x => x.UserName == viewmodel.Username.ToLower()))
                 return BadRequest("این نام کاربری انتخاب شده است");
 
-            
             var user = _mapper.Map<AppUser>(viewmodel);
 
             user.UserName = viewmodel.Username.ToLower();
@@ -76,6 +75,22 @@ namespace BookInfo.Api.Controllers.AccountApi
                 return BadRequest(result.Errors);
 
                }
+
+        [HttpGet]
+        public async Task<IActionResult> ConfirmEmail(string code , int userId)
+        {
+            if (code == null || userId == 0)
+                return NotFound("مشخصاتی یافت نشد");
+            var user =await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return NotFound("مشخصاتی یافت نشد");
+                var result = await _userManager.ConfirmEmailAsync(user, code);
+                if (!result.Succeeded)
+                    throw new InvalidOperationException("مشکلی پیش آمده است");
+                return Ok("ایمیل شما تایید شد");
+
+        }
+
 
         [HttpPost("Signin")]
         public async Task<ActionResult<UserTokenViewModel>> SignIn(UserSignInViewModel viewmodel)
